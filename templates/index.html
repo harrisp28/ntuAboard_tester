@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ntuAboard tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        .container {
+            width: 50%;
+            margin: 50px auto;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            filter: brightness(85%);
+        }
+
+        /* Popup styles */
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(to bottom, #ffffff, #f1f1f1);
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            z-index: 1000;
+            max-width: 300px;
+            text-align: center;
+        }
+        .popup-title {
+            font-size: 24px;
+            color: #534c4c;
+            margin-bottom: 10px;
+        }
+        .popup-description {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .popup-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .popup-buttons button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .failed-tests {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .failed-test {
+            background-color: #ffcccc;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .failed-button {
+            background-color: #ff6347;
+        }
+        #loadingMessage {
+            align-items: center;
+            font-size: larger;
+            justify-content: center;
+            display: flex;
+            position: fixed; /* Position fixed to keep it centered relative to the viewport */
+            top: 50%; /* Position it 50% from the top */
+            left: 50%; /* Position it 50% from the left */
+            transform: translate(-50%, -50%); /* Centering trick */
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 25px;
+            height: 25px;
+            border: 5px solid #ccc;
+            border-radius: 50%;
+            border-top-color: #4CAF50; /* Green for loading */
+            animation: spin 1s linear infinite;
+            position: absolute; /* Position absolute to move it above the text */
+            top: -35px; /* Adjust this value based on your preference */
+            left: 40%; /* Position it 50% from the left */
+            transform: translateX(-50%); /* Center it horizontally */
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ntuAboard tester</h1>
+        <button onclick="runFunction('ledsB')">Leds PORTB</button>
+        <button onclick="runFunction('ledsC')">Leds PORTC</button>
+        <button onclick="runFunction('ledsD')">Leds PORTD</button>
+        <button onclick="runFunction('lcd')">LCD Display</button>
+        <button onclick="runFunction('keypad')">Keypad</button>
+        <button onclick="runFunction('thermometer')">Thermometer</button>
+        <button onclick="runFunction('adc')">A/D Converter</button>
+
+    </div>
+    
+    <div id="loadingMessage">
+        <div class="loading-indicator"></div>Sending to ntuAboard...</div>
+      
+    <script>
+        
+
+        function showLoadingMessage() {
+        document.getElementById("loadingMessage").style.display = "block";
+        }
+
+        function hideLoadingMessage() {
+            document.getElementById("loadingMessage").style.display = "none";
+        }
+
+        window.onload = function() {
+            hideLoadingMessage();
+        };
+
+        function runFunction(func) {
+            showLoadingMessage();
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/" + func, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    hideLoadingMessage();
+                    showPopup(response.result, func);
+                }
+            };
+            xhr.send();
+        }
+
+        function showPopup(message, testName) {
+            var popup = document.createElement('div');
+            popup.classList.add('popup');
+            var buttonMessage = '';
+            switch (testName) {
+                case 'ledsB':
+                    buttonMessage = 'PORTB leds are flashing';
+                    break;
+                case 'ledsC':
+                    buttonMessage = 'PORTC leds are flashing';
+                    break;
+                case 'ledsD':
+                    buttonMessage = 'PORTD leds are flashing';
+                    break;
+                case 'lcd':
+                    buttonMessage = 'String "HELLO WORLD!" is printed in the first and then in the second line of the LCD display';
+                    break;
+                case 'keypad':
+                    buttonMessage = 'Pressed Keypad button is shown in LCD display';
+                    break;
+                case 'thermometer':
+                    buttonMessage = 'Temperature is shown in LCD display';
+                    break;
+                case 'adc':
+                    buttonMessage = 'A/D convertion result of POT1 shown in LCD (0 to 1)';
+                    break;
+                default:
+                    buttonMessage = 'No description available.';
+            }
+            popup.innerHTML = '<div class="popup-title">' + message + '</div><div class="popup-description">' + buttonMessage + '</div><div class="popup-buttons"><button onclick="handleTestResult(\'pass\', \'' + testName + '\')">Pass</button><button onclick="handleTestResult(\'fail\', \'' + testName + '\')" class="failed-button">Fail</button></div>';
+            document.body.appendChild(popup);
+        }
+
+
+        function handleTestResult(result, testName) {
+            var bottomDiv = document.getElementById('bottom-div');
+            if (result === 'fail') {
+                var failedTest = document.createElement('div');
+                failedTest.classList.add('failed-test');
+                failedTest.textContent = 'Failed Test: ' + testName;
+                bottomDiv.appendChild(failedTest);
+            } else {
+                var failedTest = document.querySelectorAll('.failed-test');
+                failedTest.forEach(function(test) {
+                    if (test.textContent.includes(testName)) {
+                        test.remove();
+                    }
+                });
+            }
+            var popup = document.querySelector('.popup');
+            popup.remove();
+        }
+    </script>
+    <div id="bottom-div" class="failed-tests"></div>
+</body>
+</html>
+
